@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yt_dlp
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -13,27 +14,16 @@ def download_video():
         return jsonify({"status": "error", "message": "Please provide a video URL"}), 400
         
     try:
-        # YouTube Bot Block එක මඟහැරීමට අවශ්‍ය ප්‍රධාන Settings
         ydl_opts = {
             'format': 'best',
             'quiet': True,
             'no_warnings': True,
-            # YouTube එක සර්වර් එකක් වෙනුවට සාමාන්‍ය Android/iOS App එකක් ලෙස හැඟවීමට:
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['android', 'ios', 'web'],
-                    'skip': ['dash', 'hls']
-                }
-            },
-            # Fake Browser Headers එකතු කිරීම
-            'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
+        
+        # අප්ලෝඩ් කළ cookies.txt ෆයිල් එක තිබේදැයි පරීක්ෂා කර එය yt-dlp එකට ලබා දීම
+        if os.path.exists('cookies.txt'):
+            ydl_opts['cookiefile'] = 'cookies.txt'
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
